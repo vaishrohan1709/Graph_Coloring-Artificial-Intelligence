@@ -171,19 +171,7 @@ class Astar:
                     heu += abs(int((num - 1) % self.type) - j)
         return heu
 
-    def heuristic_displaced(self, state):
-        heu = 0
-        for i, row in enumerate(state):
-            for j, num in enumerate(row):
-                if (num == 0 and (i != self.type - 1 or j != self.type - 1)):
-                    heu += 1
-                else:
-                    if (num == 0):
-                        continue
-                    elif (int((num - 1) / self.type) != i or int(
-                        (num - 1) % self.type) != j):
-                        heu += 1
-        return heu
+
 
 
 class IDAstar(Astar):
