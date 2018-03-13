@@ -2,6 +2,8 @@ import sys
 import argparse
 import math
 import time
+from collections import OrderedDict
+from operator import itemgetter
 from itertools import *
 from heapq import heappush, heappop
 
@@ -73,6 +75,9 @@ class DFSBPlus:
         state=self.most_constrained_variable(cur_assignment)
         print (state)
 
+        lcv_colors_seq= self.least_constraining_value(state,cur_assignment)
+        print (lcv_colors_seq)
+
         '''if self.time < 60:
             state = self.states[self.num_assigned]
             permitted_colors = self.graph[state]['Colors'][:]
@@ -90,6 +95,43 @@ class DFSBPlus:
         else:
             self.over_time = True
             return None'''
+
+    def forward_check(self,state,color,cur_assignment):
+        assigned_states = cur_assignment.keys()
+        unassigned_states = []
+        for state in self.graph.keys():
+            if state not in assigned_states:
+                unassigned_states.append(state)
+        connected_states=self.graph[state]['Nodes']
+        for neighbor in connected_states:
+            if neighbor in unassigned_states:
+                if color in self.graph[neighbor]['Colors']:
+                    self.graph[neighbor]['Colors'].remove(color)
+                    if len(self.graph[neighbor]['Colors'])==0:
+                        return False
+        return True
+
+    def least_constraining_value(self,state,cur_assignment):
+        colors=self.graph[state]['Colors'][:]
+        assigned_states = cur_assignment.keys()
+        connected_states=self.graph[state]['Nodes']
+        unassigned_states=[]
+        for state in self.graph.keys():
+            if state not in assigned_states:
+                unassigned_states.append(state)
+        colors_sequence = {c: 0 for c in colors}
+        for color in colors:
+            for neighbor in connected_states:
+                if neighbor in unassigned_states:
+                    if color in self.graph[neighbor]['Colors']:
+                        colors_sequence[color]=colors_sequence[color] +1
+        lcv=[]
+        lcv_sequence = OrderedDict(sorted(colors_sequence.items(), key=itemgetter(1)))
+        lcv=[x for x in lcv_sequence.keys()]
+        return lcv
+
+
+
 
     def most_constrained_variable(self,cur_assignment):
         assigned_states=cur_assignment.keys()
