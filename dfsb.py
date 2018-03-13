@@ -97,11 +97,43 @@ class DFSBPlus:
             return None'''
     def get_arcs(self,cur_assignment):
         assigned_states = cur_assignment.keys()
-        arcs={}
+        #arcs={}
+        arcs=[]
         for state, value in self.graph.items():
             for head in value['Nodes']:
-                arcs[head].append((state,head))
+                arcs.append((state,head))
+                #arcs[head].append((state,head))
         return arcs
+
+
+    def arc_consistency(self, cur_assignment):
+        assigned_states = cur_assignment.keys()
+        arcs=self.get_arcs(cur_assignment)
+        removed_colors = []
+        while arcs:
+            tail, head=arcs.pop(0)
+            colors_h= self.graph[head]['Colors']
+            colors_t=self.graph[tail]['Colors']
+            flag=0
+            for color in colors_t:
+                if len(colors_h- {color})<0:
+                    self.graph[tail]['Colors'].remove(color)
+                    removed_colors.append(color)
+                    flag=1
+                if len(colors_t)==0:
+                    return False
+            if flag==1:
+                arcs.append(self.get_tail_arcs(arcs,tail))
+        return True
+
+    def get_tail_arcs(self,arcs,tail):
+        temp_arcs=[]
+        for t,h in arcs:
+            if h==tail:
+                temp_arcs.append((t,h))
+        return temp_arcs
+
+
 
 
 
