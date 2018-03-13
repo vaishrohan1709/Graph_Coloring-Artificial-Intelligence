@@ -95,6 +95,15 @@ class DFSBPlus:
         else:
             self.over_time = True
             return None'''
+    def get_arcs(self,cur_assignment):
+        assigned_states = cur_assignment.keys()
+        arcs={}
+        for state, value in self.graph.items():
+            for head in value['Nodes']:
+                arcs[head].append((state,head))
+        return arcs
+
+
 
     def forward_check(self,state,color,cur_assignment):
         assigned_states = cur_assignment.keys()
