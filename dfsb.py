@@ -62,15 +62,18 @@ class DFSBPlus:
 
     def dfsb_plus_solution(self):
         self.starting_time = time.time()
-        self.assignment = self.recursive_dfsb({})
+        self.assignment = self.recursive_dfsb_plus({})
         return self.assignment
 
     def recursive_dfsb_plus(self,cur_assignment):
         if self.num_assigned==len(list(self.graph.keys())):
             return cur_assignment
         self.time = time.time() - self.starting_time
-        
-        if self.time < 60:
+
+        state=self.most_constrained_variable(cur_assignment)
+        print (state)
+
+        '''if self.time < 60:
             state = self.states[self.num_assigned]
             permitted_colors = self.graph[state]['Colors'][:]
             for color in permitted_colors:
@@ -86,10 +89,27 @@ class DFSBPlus:
 
         else:
             self.over_time = True
-            return None
+            return None'''
 
-
-
+    def most_constrained_variable(self,cur_assignment):
+        assigned_states=cur_assignment.keys()
+        unassigned_states=[]
+        for state in self.graph.keys():
+            if state not in assigned_states:
+                unassigned_states.append(state)
+        print (unassigned_states)
+        mcv=sys.maxsize
+        mcv_state=None
+        for state in self.graph.keys():
+            if state in unassigned_states:
+                if len(self.graph[state]['Colors'])<=mcv:
+                    if len(self.graph[state]['Colors'])==mcv:
+                        if len(self.graph[state]['Nodes'])>len(self.graph[mcv_state]['Nodes']):
+                            mcv_state=state
+                    elif len(self.graph[state]['Colors'])<mcv:
+                        mcv_state = state
+                    mcv = len(self.graph[state]['Colors'])
+        return mcv_state
 
 def input_parse(input_file):
     input = open(input_file).read()
@@ -111,21 +131,25 @@ def input_parse(input_file):
 
 if __name__ == '__main__':
     mode=0
-    if (str(sys.argv[3]) == '1'):
+    if (str(sys.argv[3]) == '0'):
         mode = 0
         print("DFSB")
-    elif (str(sys.argv[3]) == '2'):
+    elif (str(sys.argv[3]) == '1'):
         mode=1
         print("DFSB++")
     input_file = str(sys.argv[1])
     output_file = str(sys.argv[2])
     graph=input_parse(input_file)
-
+    print (graph)
     if mode==0:
         dfsb=DFSB(graph)
         answer=dfsb.dfsb_solution()
         print(answer)
     if mode==1:
+        print ('hey')
+        dfsb = DFSBPlus(graph)
+        dfsb.dfsb_plus_solution()
+        #print(answer)
 
 
 
