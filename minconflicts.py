@@ -17,9 +17,9 @@ class minconflicts:
         self.states = list(self.graph.keys())
         self.colors= list(self.graph.values())[0]['Colors']
         self.assignment = None
-        #self.time = 0
         self.number_conflicts=0
         self.variables_conflict=[]
+        self.steps=0
 
     def min_conflicts_color(self,state,cur_assignment,impossible_color):
 
@@ -58,15 +58,15 @@ class minconflicts:
     def minconflicts_solution(self,starting_time):
         for random_restart in range(100):
             cur_assignment=self.random_state()
-            #print ('curr ass:', cur_assignment)
             for trial in range(10000):
+                self.steps +=1
                 self.number_conflicts = 0
                 self.variables_conflict = []
                 self.conflicts_info(cur_assignment)
-                if (time.time()-starting_time)<0.3:
+                if (time.time()-starting_time)<60:
                     if self.number_conflicts==0:
                         self.assignment=cur_assignment
-                        print ('trial', trial)
+                        print ('time taken:', (time.time()-starting_time))
                         return self.assignment
                     else:
                         next_state=self.random_state_select(self.variables_conflict)
@@ -102,6 +102,15 @@ def verify_solution(solution, graph):
                 return False
     return True
 
+def write_output(output_file,answer):
+    solution=''
+    for state in sorted(answer.keys()):
+        solution=solution+ str(answer[state])+'\n'
+    solution.strip(' \t\n\r')
+    output = open(output_file, "w")
+    output.write(solution)
+    output.close()
+
 if __name__ == '__main__':
     input_file = str(sys.argv[1])
     output_file = str(sys.argv[2])
@@ -109,7 +118,9 @@ if __name__ == '__main__':
     minconflict=minconflicts(graph)
     starting_time = time.time()
     answer=minconflict.minconflicts_solution(starting_time)
-    print(answer)
+    write_output(output_file, answer)
+    print(answer,'\nsteps:',minconflict.steps)
+
     if verify_solution(answer,graph):
         print ('correct')
     else:

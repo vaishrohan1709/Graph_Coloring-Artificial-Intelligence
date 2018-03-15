@@ -14,8 +14,7 @@ class DFSB:
         self.graph=graph
         self.states=list(self.graph.keys())
         self.assignment=None
-        self.time=0
-        self.over_time=False
+        self.steps=0
 
     def dfsb_solution(self):
         self.starting_time=time.time()
@@ -23,26 +22,24 @@ class DFSB:
         return self.assignment
 
     def recursive_dfsb(self,var_assigned,cur_assignment):
-        if var_assigned==len(list(self.graph.keys())):
-            return cur_assignment
-        self.time=time.time()- self.starting_time
-        if self.time < 60:
-            state= self.states[var_assigned]
-            permitted_colors=self.graph[state]['Colors']
-            for color in permitted_colors:
-                if self.isSafe(cur_assignment,state,color):
-                    temp_cur_assignment={**cur_assignment, **{state:color}}
-                    temp_assignment=self.recursive_dfsb(var_assigned+1,temp_cur_assignment)
-                    if temp_assignment:
-                        return temp_assignment
-                    if self.over_time:
-                        return None
-            return None
-
+        if var_assigned!=len(list(self.graph.keys())):
+            self.steps +=1
+            if (time.time()- self.starting_time) < 60:
+                state= self.states[var_assigned]
+                for color in self.graph[state]['Colors']:
+                    if self.isSafe(cur_assignment,state,color):
+                        temp_cur_assignment=deepcopy(cur_assignment)
+                        temp_cur_assignment[state]=color
+                        temp_assignment=self.recursive_dfsb(var_assigned+1,temp_cur_assignment)
+                        if temp_assignment is not None:
+                            return temp_assignment
+                        if time.time()- self.starting_time>60:
+                            return None
+                return None
+            else:
+                return None
         else:
-            self.over_time= True
-            return None
-
+            return cur_assignment
     def isSafe(self,cur_assignment,state,color):
         for connected_state in self.graph[state]['Nodes']:
             if connected_state in cur_assignment:
@@ -57,8 +54,7 @@ class DFSBPlus:
         self.graph = graph
         self.states = list(self.graph.keys())
         self.assignment = None
-        self.time = 0
-        self.over_time = False
+        self.steps = 0
 
     def dfsb_plus_solution(self):
         self.starting_time = time.time()
@@ -66,42 +62,30 @@ class DFSBPlus:
         return self.assignment
 
     def recursive_dfsb_plus(self,var_assigned,cur_assignment):
-        if var_assigned==len(list(self.graph.keys())):
-            return cur_assignment
-        self.time = time.time() - self.starting_time
-
-        if self.time < 60:
-            state=self.most_constrained_variable(cur_assignment)
-            print ('current state', state)
-
-            lcv_colors_seq= self.least_constraining_value(state,cur_assignment)
-            print ('color sequence', lcv_colors_seq)
-
-            for color in lcv_colors_seq:
-                print ('Checking color: ', color,' for: ', state)
-                backup= deepcopy(self.graph) #to remove
-                self.graph[state]['Colors']=[color]
-                if self.arc_consistency(cur_assignment,state):
-                    print ('Consistent')
-                    temp_assignment = self.recursive_dfsb_plus(var_assigned+1,{**cur_assignment, **{state: color}})
-                    if temp_assignment:
-                        print ('current assignment', temp_assignment)
-                        print ("yoo\n")
-                        return temp_assignment
-                self.graph=backup
-
-                if self.over_time:
-                    print ('overtime None')
-                    return None
-
-            print ('Hey None')
-            return None
-
+        if var_assigned!=len(list(self.graph.keys())):
+            self.steps += 1
+            if time.time() - self.starting_time < 60:
+                state=self.most_constrained_variable(cur_assignment)
+                lcv_colors_seq= self.least_constraining_value(state,cur_assignment)
+                for color in lcv_colors_seq:
+                    backup= deepcopy(self.graph)
+                    self.graph[state]['Colors']=[color]
+                    if self.arc_consistency(cur_assignment,state):
+                        temp_cur_assignment = deepcopy(cur_assignment)
+                        temp_cur_assignment[state] = color
+                        temp_assignment = self.recursive_dfsb_plus(var_assigned+1,temp_cur_assignment)
+                        if temp_assignment is not None:
+                            return temp_assignment
+                    self.graph=backup
+                    if time.time() - self.starting_time>60:
+                        print ('overtime')
+                        return None
+                return None
+            else:
+                print ('overtime')
+                return None
         else:
-            print ('overtime None')
-            self.over_time= True
-            return None
-
+            return cur_assignment
     def get_arcs(self,cur_assignment):
         assigned_states = cur_assignment.keys()
         arcs=[]
@@ -121,19 +105,15 @@ class DFSBPlus:
             colors_h= self.graph[head]['Colors']
             colors_t=self.graph[tail]['Colors']
             colors_t_copy=colors_t
-            flag=0
             for color in colors_t:
                 if color in colors_h:
                     if len(colors_h)==1:
                         colors_t.remove(color)
             if len(colors_t)!=0:
                 if colors_t_copy!=colors_t:
-                    print ('append')
                     self.graph[tail]['Colors']=[colors_t]
-                    #arcs = list(set(arcs) | set(self.get_tail_arcs(arcs, tail)))
                     arcs.append(self.get_tail_arcs(arcs,tail))
             else:
-                print ('length gone')
                 return False
         return True
 
@@ -223,13 +203,23 @@ def input_parse(input_file):
 
 def verify_solution(solution, graph):
     if solution == None:
-        return True
+        return False
     for node in solution:
         for dependent_node in graph[node]['Nodes']:
-            print ('in')
             if solution[node] == solution[dependent_node]:
                 return False
     return True
+
+def write_output(output_file,answer):
+    solution=''
+    for state in sorted(answer.keys()):
+        solution=solution+'\n'+ str(answer[state])
+    solution.strip(' \t\n\r')
+    output = open(output_file, "w")
+    output.write(solution)
+    output.close()
+
+
 
 if __name__ == '__main__':
     mode=0
@@ -242,17 +232,16 @@ if __name__ == '__main__':
     input_file = str(sys.argv[1])
     output_file = str(sys.argv[2])
     graph=input_parse(input_file)
-    print (graph)
     if mode==0:
         dfsb=DFSB(graph)
         answer=dfsb.dfsb_solution()
-        print(answer)
+        write_output(output_file,answer)
+        print (answer, '\ntime taken:', time.time() - dfsb.starting_time,'steps: ',dfsb.steps)
     if mode==1:
         dfsb = DFSBPlus(graph)
         answer=dfsb.dfsb_plus_solution()
-        print (answer)
-        #print(answer)
-
+        write_output(output_file, answer)
+        print (answer,'\ntime taken:',time.time()-dfsb.starting_time,'steps: ',dfsb.steps)
     if verify_solution(answer,graph):
         print ('correct')
     else:
