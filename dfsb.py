@@ -70,12 +70,14 @@ class DFSBPlus:
                 for color in lcv_colors_seq:
                     backup= deepcopy(self.graph)
                     self.graph[state]['Colors']=[color]
+                    self.steps += 1
                     if self.arc_consistency(cur_assignment,state):
                         temp_cur_assignment = deepcopy(cur_assignment)
                         temp_cur_assignment[state] = color
                         temp_assignment = self.recursive_dfsb_plus(var_assigned+1,temp_cur_assignment)
                         if temp_assignment is not None:
                             return temp_assignment
+
                     self.graph=backup
                     if time.time() - self.starting_time>60:
                         print ('overtime')
@@ -216,7 +218,10 @@ def write_output(output_file,answer):
         solution=solution+'\n'+ str(answer[state])
     solution.strip(' \t\n\r')
     output = open(output_file, "w")
-    output.write(solution)
+    if(answer is None):
+        output.write('No answer')
+    else:
+        output.write(solution)
     output.close()
 
 
@@ -236,12 +241,12 @@ if __name__ == '__main__':
         dfsb=DFSB(graph)
         answer=dfsb.dfsb_solution()
         write_output(output_file,answer)
-        print (answer, '\ntime taken:', time.time() - dfsb.starting_time,'steps: ',dfsb.steps)
+        print (answer, '\ntime taken:', (time.time() - dfsb.starting_time)*1000, 'steps: ', dfsb.steps)
     if mode==1:
         dfsb = DFSBPlus(graph)
         answer=dfsb.dfsb_plus_solution()
         write_output(output_file, answer)
-        print (answer,'\ntime taken:',time.time()-dfsb.starting_time,'steps: ',dfsb.steps)
+        print (answer,'\ntime taken:',(time.time()-dfsb.starting_time)*1000,'steps: ',dfsb.steps)
     if verify_solution(answer,graph):
         print ('correct')
     else:

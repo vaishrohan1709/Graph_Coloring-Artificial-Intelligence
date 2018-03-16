@@ -66,7 +66,7 @@ class minconflicts:
                 if (time.time()-starting_time)<60:
                     if self.number_conflicts==0:
                         self.assignment=cur_assignment
-                        print ('time taken:', (time.time()-starting_time))
+                        print ('time taken:', (time.time()-starting_time)*1000)
                         return self.assignment
                     else:
                         next_state=self.random_state_select(self.variables_conflict)
@@ -108,7 +108,10 @@ def write_output(output_file,answer):
         solution=solution+ str(answer[state])+'\n'
     solution.strip(' \t\n\r')
     output = open(output_file, "w")
-    output.write(solution)
+    if (answer is None):
+        output.write('No answer')
+    else:
+        output.write(solution)
     output.close()
 
 if __name__ == '__main__':
